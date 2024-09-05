@@ -98,7 +98,12 @@ public class CPHInline
     // Метод для отримання правильної форми слова "фолов" в залежності від кількості
     private string GetFollowSuffix(int number)
     {
-        switch (number)
+        if (number % 100 >= 11 && number % 100 <= 19)
+        {
+            return "фоловів";
+        }
+
+        switch (number % 10)
         {
             case 1:
                 return "фолов";
