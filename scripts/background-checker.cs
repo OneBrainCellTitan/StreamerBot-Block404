@@ -34,6 +34,7 @@ public class CPHInline
             CPH.SetGlobalVar("currentViewers", existingViewers, false);
             return true;
         }
+
         return false;
     }
 
@@ -41,14 +42,29 @@ public class CPHInline
     {
         string url = $"https://artemiano.top/api/twitch/{userName}";
         string response;
-
         using (HttpClient client = new HttpClient())
         {
             // Додаємо заголовок User-Agent
             client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.102 Safari/537.36");
-
-            // Виконання асинхронного HTTP-запиту
-            response = await client.GetStringAsync(url); 
+            try
+            {
+                // Надсилаємо GET-запит до API
+                HttpResponseMessage httpResponse = await client.GetAsync(url);
+                if (httpResponse.IsSuccessStatusCode)
+                {
+                    response = await httpResponse.Content.ReadAsStringAsync();
+                }
+                else
+                {
+                    CPH.LogError($"Помилка при отриманні даних: {httpResponse.StatusCode}");
+                    return;
+                }
+            }
+            catch (HttpRequestException e)
+            {
+                CPH.LogError($"Запит завершився з помилкою: {e.Message}");
+                return;
+            }
         }
 
         if (response.Contains("Виникла помилка на сайті, пов'язана з API Twitch :("))
@@ -59,7 +75,6 @@ public class CPHInline
 
         // Парсимо кількість "болотномовних" з відповіді
         int swampSpeakersCount = ParseCount(response, "болотномовних:");
-
         // Перевіряємо кількість і приймаємо рішення
         if (swampSpeakersCount > 10) // Замініть "10" на потрібну кількість для моментального бану
         {
@@ -93,7 +108,6 @@ public class CPHInline
 
         return count;
     }
-
 
     // Метод для отримання правильної форми слова "фолов" в залежності від кількості
     private string GetFollowSuffix(int number)
